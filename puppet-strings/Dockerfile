@@ -10,9 +10,11 @@ LABEL \
 RUN apt-get update && apt-get install -y \
   jq
 
+# TODO: install puppet, puppet-strings, and deps using bundler?
+
 # Install puppet
 RUN gem install puppet \
-  --version 5.3.3 \
+  --version 5.4.0 \
   --no-document \
   --silent
 
@@ -24,16 +26,21 @@ RUN gem install rgen \
 
 # Install puppet-strings
 RUN gem install puppet-strings \
-  --version 1.1.1 \
+  --version 1.2.1 \
   --no-document \
   --silent
 
-# Set workdir and copy context into it
-WORKDIR /opt/anubis
-ADD . /opt/anubis
+# Add a non-root user to run things as
+RUN useradd -ms /bin/bash anubis
+
+# Add build context and set workdir
+ADD . /home/anubis
+WORKDIR /home/anubis
+
+USER anubis
 
 # Make a workspace folder
 RUN mkdir workspace
 
-# Set default command
-CMD ["/opt/anubis/bin/entrypoint.sh"]
+# Set default entrypoint
+ENTRYPOINT ["/home/anubis/bin/entrypoint"]
