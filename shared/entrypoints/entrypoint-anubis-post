@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Add token to output
+jq \
+  --arg token "${WEBHOOK_TOKEN}" \
+  --from-file ../response.jq \
+  --compact-output \
+  output.json \
+  > response.json
+
+# Post results back to specified URI
+curl \
+  --fail \
+  --progress-bar \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d@response.json \
+  "${WEBHOOK_URI}"
