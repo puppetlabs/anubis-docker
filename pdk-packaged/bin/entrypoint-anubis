@@ -1,3 +1,26 @@
 #!/bin/bash
+set -e
 
-# TODO
+# Establish source dir for relative includes
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+
+# Pre-suite (download and extract requested release)
+# shellcheck source=shared/entrypoint-pre disable=SC1091
+. "$DIR/shared/entrypoint-pre"
+
+# Anubis-specific pre-suite (check for missing ENV vars)
+# shellcheck source=shared/entrypoint-anubis-pre disable=SC1091
+. "$DIR/shared/entrypoint-anubis-pre"
+
+# Run PDK with the rest of the given args
+/opt/puppetlabs/pdk/bin/pdk --format json "${@:2}" > output.json
+
+# Anubis-specific result handling
+# shellcheck source=shared/entrypoint-anubis-post disable=SC1091
+. "$DIR/shared/entrypoint-anubis-post"
+
+# shellcheck source=shared/entrypoint-post disable=SC1091
+. "$DIR/shared/entrypoint-post"
+
+exit 0
