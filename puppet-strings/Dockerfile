@@ -33,11 +33,12 @@ RUN gem install puppet-strings \
 # Add a non-root user to run things as
 RUN useradd -ms /bin/bash anubis
 
-# Add build context and set workdir
-ADD . /home/anubis
 WORKDIR /home/anubis
-
 USER anubis
+
+# Add build context and set workdir
+ADD puppet-strings /home/anubis
+ADD shared/entrypoints /home/anubis/bin/shared
 
 # Make a workspace folder
 RUN mkdir workspace
