@@ -13,16 +13,12 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 # shellcheck source=../shared/entrypoint-anubis-pre disable=SC1091
 . "$DIR/../shared/entrypoint-anubis-pre"
 
-# TODO: these hardcoded values will be replaced by output from something like
-# eval $(pdk environment --puppet-version=\${\$puppet_version})
-# Once that change is incorporated, we may want to consolidate the output generation and
-# error handling into a shared script.
-export PATH=$PATH:/opt/puppetlabs/pdk/private/ruby/2.5.8/bin:/opt/puppetlabs/pdk/private/ruby/2.5.8/lib/ruby/gems/2.5.0
-export GEM_PATH=/opt/puppetlabs/pdk/private/ruby/2.5.8/lib/ruby/gems/2.5.0:/opt/puppetlabs/pdk/share/cache/ruby/2.5.0:/opt/puppetlabs/pdk/private/puppet/ruby/2.5.0
+# TODO: consolidate the output generation and error handling into a shared script for use across all evaluations.
+eval $(pdk env)
 
 # Run parser and emit output to json document
 {
-  /opt/puppetlabs/pdk/private/puppet/ruby/2.5.0/bin/puppet parser validate --render-as json manifests > parser_output.json
+  puppet parser validate --render-as json manifests > parser_output.json
   exit_code=$?
 } || {
   true

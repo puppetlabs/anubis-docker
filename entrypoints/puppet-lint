@@ -24,13 +24,11 @@ if [ -d "manifests" ]; then
   done
 fi
 
-# TODO make a PDK frontend/backdoor for this? like a wrapper in /opt/puppetlabs/pdk/private?
-export PATH=$PATH:/opt/puppetlabs/pdk/private/ruby/2.5.8/bin:/opt/puppetlabs/pdk/private/ruby/2.5.8/lib/ruby/gems/2.5.0
-export GEM_PATH=/opt/puppetlabs/pdk/private/ruby/2.5.8/lib/ruby/gems/2.5.0:/opt/puppetlabs/pdk/share/cache/ruby/2.5.0:/opt/puppetlabs/pdk/private/puppet/ruby/2.5.0
+eval $(pdk env)
 
 # Run lint and emit output to json document
 {
-  /opt/puppetlabs/pdk/share/cache/ruby/2.5.0/bin/puppet-lint --json manifests > lint_output.json
+  puppet-lint --json manifests > lint_output.json
   exit_code=$?
 } || {
   true

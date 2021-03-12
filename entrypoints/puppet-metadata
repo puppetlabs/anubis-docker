@@ -13,14 +13,11 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 # shellcheck source=../shared/entrypoint-anubis-pre disable=SC1091
 . "$DIR/../shared/entrypoint-anubis-pre"
 
-# TODO: these hardcoded values will be replaced by output from something like
-# eval $(pdk environment --puppet-version=\${\$puppet_version})
-export PATH=$PATH:/opt/puppetlabs/pdk/private/ruby/2.5.8/bin:/opt/puppetlabs/pdk/private/ruby/2.5.8/lib/ruby/gems/2.5.0
-export GEM_PATH=/opt/puppetlabs/pdk/private/ruby/2.5.8/lib/ruby/gems/2.5.0:/opt/puppetlabs/pdk/share/cache/ruby/2.5.0:/opt/puppetlabs/pdk/private/puppet/ruby/2.5.0
+eval $(pdk env)
 
 # Run metadata-json-lint and emit output to json document
 {
-  /opt/puppetlabs/pdk/share/cache/ruby/2.5.0/bin/metadata-json-lint --format json > metadata_output.json
+  metadata-json-lint --format json > metadata_output.json
   exit_code=$?
 } || {
   true
