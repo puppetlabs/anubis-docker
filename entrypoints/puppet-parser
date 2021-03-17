@@ -13,16 +13,29 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 # shellcheck source=../shared/entrypoint-anubis-pre disable=SC1091
 . "$DIR/../shared/entrypoint-anubis-pre"
 
-# TODO: these hardcoded values will be replaced by output from something like
-# eval $(pdk environment --puppet-version=\${\$puppet_version})
-# Once that change is incorporated, we may want to consolidate the output generation and
-# error handling into a shared script.
-export PATH=$PATH:/opt/puppetlabs/pdk/private/ruby/2.5.8/bin:/opt/puppetlabs/pdk/private/ruby/2.5.8/lib/ruby/gems/2.5.0
-export GEM_PATH=/opt/puppetlabs/pdk/private/ruby/2.5.8/lib/ruby/gems/2.5.0:/opt/puppetlabs/pdk/share/cache/ruby/2.5.0:/opt/puppetlabs/pdk/private/puppet/ruby/2.5.0
+# The puppet version selected with `pdk env` defaults to the latest version available for
+# a given Ruby version, so to keep thing simpler, disallow specifying a minor version.
+valid_version='^[0-9]+$'
+version=${2:-7}
+if ! [[ $version =~ $valid_version ]] ; then
+  echo "Error: Puppet version should be a major version only, e.g. 6" >&2; exit 1
+fi
 
+eval $(pdk env --puppet-version=${version})
+
+active_version=$(puppet --version | grep -oP '^\d+')
+if [[ $version != $active_version ]] ; then
+  echo "Error: Active puppet version set with 'pdk env' does not match requested version." >&2; exit 1
+fi
+
+# TODO: consolidate the output generation and error handling into a shared script for use across all evaluations.
 # Run parser and emit output to json document
 {
-  /opt/puppetlabs/pdk/private/puppet/ruby/2.5.0/bin/puppet parser validate --render-as json manifests > parser_output.json
+  # Note: `pdk env` above will set the Ruby version and default to the latest version of Puppet installed
+  # with that Ruby version. If in the future we no longer have a 1-1 relationship between Ruby versions and
+  # major versions of Puppet, we can specify which version of Puppet to use in the command below, e.g.
+  # puppet _7.3.0_ parser validate
+  puppet parser validate --render-as json manifests > parser_output.json
   exit_code=$?
 } || {
   true
@@ -32,7 +45,7 @@ export GEM_PATH=/opt/puppetlabs/pdk/private/ruby/2.5.8/lib/ruby/gems/2.5.0:/opt/
 if [[ ! -s parser_output.json ]]; then
   echo 'null' > parser_output.json
 fi
-ruby -e "require 'json'; puts ({ exit_code: $exit_code, output: JSON.parse(File.read('parser_output.json')) }).to_json" > anubis_output.json
+ruby -e "require 'json'; puts ({ exit_code: $exit_code, puppet_version: $version, output: JSON.parse(File.read('parser_output.json')) }).to_json" > anubis_output.json
 cat anubis_output.json
 
 # Post results back to given API endpoint
