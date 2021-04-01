@@ -23,8 +23,9 @@ fi
 
 eval $(pdk env --puppet-version=${version})
 
-active_version=$(puppet --version | grep -oP '^\d+')
-if [[ $version != $active_version ]] ; then
+active_version=$(puppet --version)
+active_major_version=$(echo $active_version | grep -oP '^\d+')
+if [[ $version != $active_major_version ]] ; then
   echo "Error: Active puppet version set with 'pdk env' does not match requested version." >&2; exit 1
 fi
 
@@ -45,7 +46,7 @@ fi
 if [[ ! -s parser_output.json ]]; then
   echo 'null' > parser_output.json
 fi
-ruby -e "require 'json'; puts ({ exit_code: $exit_code, puppet_version: $version, output: JSON.parse(File.read('parser_output.json')) }).to_json" > anubis_output.json
+ruby -e "require 'json'; puts ({ exit_code: $exit_code, puppet_version: \"$active_version\", output: JSON.parse(File.read('parser_output.json')) }).to_json" > anubis_output.json
 cat anubis_output.json
 
 # Post results back to given API endpoint
