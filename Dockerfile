@@ -1,4 +1,4 @@
-FROM puppet/pdk:nightly
+FROM puppet/pdk:latest
 
 USER root
 
