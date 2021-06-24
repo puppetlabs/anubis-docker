@@ -13,6 +13,15 @@ if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 # shellcheck source=../shared/entrypoint-anubis-pre disable=SC1091
 . "$DIR/../shared/entrypoint-anubis-pre"
 
+# puppet-lint reports incorrect autoloader_layout errors if the current directory is not the
+# same as the module name, so we need to get just the module name (no author name, no version number)
+# from $release_slug and update the name of the current directory.
+[[ $release_slug =~ [a-zA-Z0-9]+-([a-zA-Z][a-zA-Z0-9_]+)-[0-9]+\.[0-9]+\.[0-9]+([\-+].+)? ]]
+modname=${BASH_REMATCH[1]}
+mv "$PWD" "${PWD%/*}/${modname}"
+cd ..
+cd $modname
+
 manifests=0
 lines=0
 
