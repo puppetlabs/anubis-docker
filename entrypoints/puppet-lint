@@ -35,6 +35,9 @@ fi
 
 eval $(pdk env)
 
+# Remove any custom config if present
+rm -f -- .puppet-lint.rc
+
 # Run lint and emit output to json document
 {
   puppet-lint --json manifests > lint_output.json
