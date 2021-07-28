@@ -3,7 +3,7 @@ FROM puppet/pdk:latest
 USER root
 
 RUN apt-get update && \
-    apt-get install -y curl && \
+    apt-get install -y curl jq && \
     rm -rf /var/lib/apt/lists/*
 
 RUN ["useradd", "--create-home", "--home-dir", "/anubis", "--shell", "/bin/bash", "--user-group", "anubis"]
