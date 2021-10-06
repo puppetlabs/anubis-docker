@@ -21,6 +21,15 @@ if ! [[ $version =~ $valid_version ]] ; then
   echo "Error: Puppet version should be a major version only, e.g. 6" >&2; exit 1
 fi
 
+manifests=0
+
+if [ -d "manifests" ]; then
+  for f in $(find manifests -type f -name "*.pp")
+  do
+    manifests=$((manifests+1))
+  done
+fi
+
 eval $(pdk env --puppet-version=${version})
 
 active_version=$(puppet --version)
@@ -31,6 +40,7 @@ fi
 
 # TODO: consolidate the output generation and error handling into a shared script for use across all evaluations.
 # Run parser and emit output to json document
+if (( $manifests > 0 )); then
 {
   # Note: `pdk env` above will set the Ruby version and default to the latest version of Puppet installed
   # with that Ruby version. If in the future we no longer have a 1-1 relationship between Ruby versions and
@@ -41,12 +51,21 @@ fi
 } || {
   true
 }
+else
+  echo 'null' > parser_output.json
+  exit_code='nil'
+fi
 
 # Ensure file contains valid JSON if there's no output
 if [[ ! -s parser_output.json ]]; then
   echo 'null' > parser_output.json
 fi
-ruby -e "require 'json'; puts ({ exit_code: $exit_code, puppet_version: \"$active_version\", output: JSON.parse(File.read('parser_output.json')) }).to_json" > anubis_output.json
+ruby -e "require 'json'; puts ({ \
+                                 exit_code: $exit_code, \
+                                 manifests: $manifests, \
+                                 puppet_version: \"$active_version\", \
+                                 output: JSON.parse(File.read('parser_output.json')) \
+                              }).to_json" > anubis_output.json
 cat anubis_output.json
 
 # Post results back to given API endpoint
